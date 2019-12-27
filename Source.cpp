@@ -100,8 +100,9 @@ double getCPUTime()
 using namespace std;
 
 int* glue(int* a, int lenA, int* b, int lenB);
-void glueAndDelete(int*& arr, int* a, int lenA, int* b, int lenB);
-void newGenerationSort(int*& arr, int len);
+void glueAndDelete(int*& arr, int*& a, int lenA, int*& b, int lenB);
+void newGenerationSort(int*& arr, int len, int avgStep);
+int getAvarageStep(int* arr, int len);
 
 void printArr(int* arr, int len) {
 	for (int i = 0; i < len; ++i) {
@@ -144,7 +145,7 @@ int main() {
 	cout << "Qsort time: " << (t2 - t1) * 1000 << endl;
 
 	t1 = getCPUTime();
-	newGenerationSort(a1, length);
+	newGenerationSort(a1, length, getAvarageStep(a1, length) << 3);
 	t2 = getCPUTime();
 
 	cout << "My time: " << (t2 - t1) * 1000 << endl;
@@ -157,15 +158,22 @@ int main() {
 
 		printArr(a1, length);
 		printArr(a2, length);
-		newGenerationSort(a3, length);
+		newGenerationSort(a3, length, getAvarageStep(a3, length));
 	}
 
 	system("pause");
 	return 0;
 }
 
+int getAvarageStep(int* arr, int len) {
+	long result = 0;
+	for (int i = 1; i < len; ++i) {
+		result += abs(arr[i] - arr[i - 1]);
+	}
+	return round(result / (len - 1.));
+}
 
-void newGenerationSort(int*& arr, int len) {
+void newGenerationSort(int*& arr, int len, int avgStep) {
 	if (len < 2)
 		return;
 	
@@ -182,15 +190,18 @@ void newGenerationSort(int*& arr, int len) {
 	selection1[right1++] = arr[1];
 
 	int restLen = 0;
-
 	for (int i = 2; i < len; ++i) {
 
-		if (selection1[right1 - 1] <= arr[i]) {
+		if (abs(selection1[right1 - 1] - arr[i]) <= avgStep && 
+			selection1[right1 - 1] <= arr[i]) 
+		{
 			selection1[right1++] = arr[i];
 			continue;
 		}
 
-		if (selection1[left1 + 1] >= arr[i]) {
+		if (abs(selection1[left1 + 1] - arr[i]) && 
+			selection1[left1 + 1] >= arr[i]) 
+		{
 			selection1[left1--] = arr[i];
 			continue;
 		}
@@ -204,7 +215,7 @@ void newGenerationSort(int*& arr, int len) {
 	delete[] selection1; // =>>> we need to delete the rest after significant data
 	selection1 = copy;
 
-	newGenerationSort(restElements, restLen);
+	newGenerationSort(restElements, restLen, avgStep);
 
 	glueAndDelete(arr, selection1, firstLen, restElements, restLen); 
 }
@@ -235,13 +246,15 @@ int* glue(int* a, int lenA, int* b, int lenB) {
 	return c;
 }
 
-void glueAndDelete(int*& arr, int* a, int lenA, int* b, int lenB) {
+void glueAndDelete(int*& arr, int*& a, int lenA, int*& b, int lenB) {
 	if (lenA == 0) {
 		arr = b;
+		delete[] a;
 		return;
 	}
 	if (lenB == 0) {
 		arr = a;
+		delete[] b;
 		return;
 	}
 
