@@ -101,7 +101,8 @@ using namespace std;
 
 int* glue(int* a, int lenA, int* b, int lenB);
 void glueAndDelete(int*& arr, int*& a, int lenA, int*& b, int lenB);
-void newGenerationSort(int*& arr, int len, int avgStep);
+void newGenerationSort(int*& arr, int len);
+void merge_sort(int* a, int lo, int hi, int& minPortion);
 int getAvarageStep(int* arr, int len);
 
 void printArr(int* arr, int len) {
@@ -145,7 +146,9 @@ int main() {
 	cout << "Qsort time: " << (t2 - t1) * 1000 << endl;
 
 	t1 = getCPUTime();
-	newGenerationSort(a1, length, getAvarageStep(a1, length) << 3);
+	int portion = log2(length);
+	portion *= portion;
+	merge_sort(a1, 0, length - 1, portion);
 	t2 = getCPUTime();
 
 	cout << "My time: " << (t2 - t1) * 1000 << endl;
@@ -158,7 +161,7 @@ int main() {
 
 		printArr(a1, length);
 		printArr(a2, length);
-		newGenerationSort(a3, length, getAvarageStep(a3, length));
+		newGenerationSort(a3, length);
 	}
 
 	system("pause");
@@ -173,11 +176,39 @@ int getAvarageStep(int* arr, int len) {
 	return round(result / (len - 1.));
 }
 
-void newGenerationSort(int*& arr, int len, int avgStep) {
+void merge_sort(int* a, int lo, int hi, int &minPortion) {
+	if (hi <= lo)
+		return;
+
+	int mid = lo + (hi - lo) / 2;
+	if (hi - lo <= minPortion) {
+		int* part = glue(a + lo, hi - lo + 1, nullptr, 0);
+		newGenerationSort(part, hi - lo + 1);
+
+		for (int i = lo; i <= hi; ++i) {
+			a[i] = part[i - lo];
+		}
+		delete[] part;
+
+		return;
+	}
+	
+	merge_sort(a, lo, mid, minPortion);
+	merge_sort(a, mid + 1, hi, minPortion);
+
+	int* b = glue(a + lo, mid - lo + 1, a + mid + 1, hi - mid);
+
+	for (int i = lo; i <= hi; i++)
+		a[i] = b[i - lo];
+	delete[] b;
+}
+
+
+void newGenerationSort(int*& arr, int len) {
 	if (len < 2)
 		return;
 	
-	int* selection1 = new int[len << 1];
+	int* selection = new int[len << 1];
 	int left1 = len - 1;
 	int right1 = len;
 
@@ -186,38 +217,36 @@ void newGenerationSort(int*& arr, int len, int avgStep) {
 	if (arr[0] > arr[1])
 		swap(arr[0], arr[1]);
 
-	selection1[left1--] = arr[0];
-	selection1[right1++] = arr[1];
+	selection[left1--] = arr[0];
+	selection[right1++] = arr[1];
 
 	int restLen = 0;
 	for (int i = 2; i < len; ++i) {
 
-		if (abs(selection1[right1 - 1] - arr[i]) <= avgStep && 
-			selection1[right1 - 1] <= arr[i]) 
+		if (selection[right1 - 1] <= arr[i]) 
 		{
-			selection1[right1++] = arr[i];
+			selection[right1++] = arr[i];
 			continue;
 		}
 
-		if (abs(selection1[left1 + 1] - arr[i]) && 
-			selection1[left1 + 1] >= arr[i]) 
+		if (selection[left1 + 1] >= arr[i]) 
 		{
-			selection1[left1--] = arr[i];
+			selection[left1--] = arr[i];
 			continue;
 		}
 
 		restElements[restLen++] = arr[i];
 	}
 	delete[] arr; // to fix memory overflow =>>>
-	int firstLen = right1 - left1 - 1;
+	int selectionLen = right1 - left1 - 1;
 	
-	int* copy = glue(selection1 + left1 + 1, firstLen, nullptr, 0); // return new array with the same elements
-	delete[] selection1; // =>>> we need to delete the rest after significant data
-	selection1 = copy;
+	int* copy = glue(selection + left1 + 1, selectionLen, nullptr, 0); // return new array with the same elements
+	delete[] selection; // =>>> we need to delete the rest after significant data
+	selection = copy;
 
-	newGenerationSort(restElements, restLen, avgStep);
+	newGenerationSort(restElements, restLen);
 
-	glueAndDelete(arr, selection1, firstLen, restElements, restLen); 
+	glueAndDelete(arr, selection, selectionLen, restElements, restLen); 
 }
 
 // work with min and rest arrays
