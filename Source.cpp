@@ -145,7 +145,7 @@ int main() {
 	t2 = getCPUTime();
 
 	cout << "My time: " << (t2 - t1) * 1000 << endl;
-	
+
 	if (!arrsEqual(a1, a2, length)) {
 		cout << "Something wrong with sort!" << endl;
 	}
@@ -153,6 +153,26 @@ int main() {
 
 	system("pause");
 	return 0;
+}
+
+void merge2ArraysIntoSingle(int* arr, int len, int& i, int* arr1, int index1, int len1, int* arr2, int index2, int len2) {
+	for (; i < len; ++i) {
+		if (index1 >= len1) {
+			while (index2 < len2) {
+				arr[i++] = arr2[index2++];
+			}
+			break;
+		}
+
+		if (index2 >= len2) {
+			while (index1 < len1) {
+				arr[i++] = arr1[index1++];
+			}
+			break;
+		}
+
+		arr[i] = (arr1[index1] < arr2[index2]) ? arr1[index1++] : arr2[index2++];
+	}
 }
 
 void newGenerationSort(int* arr, int len) {
@@ -163,7 +183,7 @@ void newGenerationSort(int* arr, int len) {
 	int* maxElements = new int[len];
 	int* restElements = new int[len];
 
-	minElements[0] = max(arr[0], arr[1]);
+	minElements[len - 1] = max(arr[0], arr[1]);
 	maxElements[0] = min(arr[0], arr[1]);
 
 	int minLen = 1; // 4 3 2
@@ -176,8 +196,8 @@ void newGenerationSort(int* arr, int len) {
 			continue;
 		}
 
-		if (minElements[minLen - 1] >= arr[i]) {
-			minElements[minLen++] = arr[i];
+		if (minElements[len - minLen] >= arr[i]) {
+			minElements[len - ++minLen] = arr[i];
 			continue;
 		}
 
@@ -189,53 +209,21 @@ void newGenerationSort(int* arr, int len) {
 	// glue 3 arrays into single
 	int indexMax = 0;
 	int indexRest = 0;
-	int indexMinReverse = minLen - 1;
+	int indexMin = len - minLen;
 
 	for (int i = 0; i < len; ++i) {
 		if (indexMax >= maxLen) {
 			// work with min and rest arrays
 
-			for (; i < len; ++i) {
-				if (indexRest >= restLen) {
-					while (indexMinReverse >= 0) {
-						arr[i++] = minElements[indexMinReverse--];
-					}
-					break;
-				}
-
-				if (indexMinReverse < 0) {
-					while (indexRest < restLen) {
-						arr[i++] = restElements[indexRest++];
-					}
-					break;
-				}
-
-				arr[i] = (restElements[indexRest] < minElements[indexMinReverse]) ? restElements[indexRest++] : minElements[indexMinReverse--];
-			}
+			merge2ArraysIntoSingle(arr, len, i, restElements, indexRest, restLen, minElements + len - minLen, indexMin - len + minLen, minLen);
 
 			break;
 		}
 
-		if (indexMinReverse < 0) {
+		if (indexMin >= len) {
 			// work with max and rest arrays
 
-			for (; i < len; ++i) {
-				if (indexMax >= maxLen) {
-					while (indexRest < restLen) {
-						arr[i++] = restElements[indexRest++];
-					}
-					break;
-				}
-
-				if (indexRest >= restLen) {
-					while (indexMax < maxLen) {
-						arr[i++] = maxElements[indexMax++];
-					}
-					break;
-				}
-				
-				arr[i] = (maxElements[indexMax] < restElements[indexRest]) ? maxElements[indexMax++] : restElements[indexRest++];
-			}
+			merge2ArraysIntoSingle(arr, len, i, maxElements, indexMax, maxLen, restElements, indexRest, restLen);
 
 			break;
 		}
@@ -243,37 +231,21 @@ void newGenerationSort(int* arr, int len) {
 		if (indexRest >= restLen) {
 			// work with min and max arrays
 
-			for (; i < len; ++i) {
-				if (indexMax >= maxLen) {
-					while (indexMinReverse >= 0) {
-						arr[i++] = minElements[indexMinReverse--];
-					}
-					break;
-				}
-
-				if (indexMinReverse < 0) {
-					while (indexMax < maxLen) {
-						arr[i++] = maxElements[indexMax++];
-					}
-					break;
-				}
-
-				arr[i] = (maxElements[indexMax] < minElements[indexMinReverse]) ? maxElements[indexMax++] : minElements[indexMinReverse--];
-			}
+			merge2ArraysIntoSingle(arr, len, i, maxElements, indexMax, maxLen, minElements + len - minLen, indexMin - len + minLen, minLen);
 			
 			break;
 		}
 
 		// work with 3 arrays
 
-		int a = minElements[indexMinReverse];
+		int a = minElements[indexMin];
 		int b = maxElements[indexMax];
 		int c = restElements[indexRest];
 
 		if (a < b) {
 			if (a < c) {
 				arr[i] = a;
-				--indexMinReverse;
+				++indexMin;
 			}
 			else { // c < a < b
 				arr[i] = c;
@@ -295,6 +267,13 @@ void newGenerationSort(int* arr, int len) {
 	delete[] maxElements;
 	
 }
+
+// work with min and rest arrays
+// 0 1 2 3 4 5 6 7 8 9 10 - indexes
+// 0 0 0 0 0 1 2 3 4 5 6
+// minLen = 6
+// len = 11
+// arr + len - minLen
 
 int* glue(int* a, int lenA, int* b, int lenB) {
 	int lenC = lenA + lenB, * c = new int[lenC], indx_a = 0, indx_b = 0, i = 0;
