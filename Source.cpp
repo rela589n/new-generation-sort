@@ -100,6 +100,7 @@ double getCPUTime()
 using namespace std;
 
 int* glue(int* a, int lenA, int* b, int lenB);
+void glueAndDelete(int*& arr, int* a, int lenA, int* b, int lenB);
 void newGenerationSort(int*& arr, int len);
 
 void printArr(int* arr, int len) {
@@ -141,7 +142,7 @@ int main() {
 	double t2 = getCPUTime();
 
 	cout << "Qsort time: " << (t2 - t1) * 1000 << endl;
-	
+
 	t1 = getCPUTime();
 	newGenerationSort(a1, length);
 	t2 = getCPUTime();
@@ -156,6 +157,7 @@ int main() {
 
 		printArr(a1, length);
 		printArr(a2, length);
+		newGenerationSort(a3, length);
 	}
 
 	system("pause");
@@ -198,8 +200,7 @@ void newGenerationSort(int*& arr, int len) {
 
 	newGenerationSort(restElements, restLen);
 
-	arr = glue(MinMax, minLen + maxLen, restElements, restLen); // =>>> we need to delete the rest after significant data
-	delete[] restElements;
+	glueAndDelete(arr, MinMax, minLen + maxLen, restElements, restLen); // =>>> we need to delete the rest after significant data
 }
 
 // work with min and rest arrays
@@ -226,4 +227,19 @@ int* glue(int* a, int lenA, int* b, int lenB) {
 		break;
 	}
 	return c;
+}
+
+void glueAndDelete(int*& arr, int* a, int lenA, int* b, int lenB) {
+	if (lenA == 0) {
+		arr = b;
+		return;
+	}
+	if (lenB == 0) {
+		arr = a;
+		return;
+	}
+
+	arr = glue(a, lenA, b, lenB);
+	delete[]a;
+	delete[]b;
 }
