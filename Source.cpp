@@ -164,43 +164,49 @@ int main() {
 	return 0;
 }
 
+
 void newGenerationSort(int*& arr, int len) {
 	if (len < 2)
 		return;
 	
-	int* minElements = new int[len];
-	int* maxElements = new int[len];
+	int* selection1 = new int[len << 1];
+	int left1 = len - 1;
+	int right1 = len;
+
 	int* restElements = new int[len];
 
-	minElements[len - 1] = max(arr[0], arr[1]);
-	maxElements[0] = min(arr[0], arr[1]);
+	if (arr[0] > arr[1])
+		swap(arr[0], arr[1]);
 
-	int minLen = 1; // 4 3 2
-	int maxLen = 1; // 5 6 7
+	selection1[left1--] = arr[0];
+	selection1[right1++] = arr[1];
+
 	int restLen = 0;
 
 	for (int i = 2; i < len; ++i) {
-		if (maxElements[maxLen - 1] <= arr[i]) {
-			maxElements[maxLen++] = arr[i];
+
+		if (selection1[right1 - 1] <= arr[i]) {
+			selection1[right1++] = arr[i];
 			continue;
 		}
 
-		if (minElements[len - minLen] >= arr[i]) {
-			minElements[len - ++minLen] = arr[i];
+		if (selection1[left1 + 1] >= arr[i]) {
+			selection1[left1--] = arr[i];
 			continue;
 		}
 
 		restElements[restLen++] = arr[i];
 	}
 	delete[] arr; // to fix memory overflow =>>>
-	int* MinMax = glue(minElements + len - minLen, minLen, maxElements, maxLen);
+	int firstLen = right1 - left1 - 1;
 	
-	delete[] minElements;
-	delete[] maxElements;
+	int* copy = glue(selection1 + left1 + 1, firstLen, nullptr, 0); // return new array with the same elements
+	delete[] selection1; // =>>> we need to delete the rest after significant data
+	selection1 = copy;
 
 	newGenerationSort(restElements, restLen);
 
-	glueAndDelete(arr, MinMax, minLen + maxLen, restElements, restLen); // =>>> we need to delete the rest after significant data
+	glueAndDelete(arr, selection1, firstLen, restElements, restLen); 
 }
 
 // work with min and rest arrays
