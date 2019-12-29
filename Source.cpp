@@ -5,6 +5,7 @@
 #include "sort_utilities.h"
 
 using namespace std;
+using namespace rela589n;
 
 int getAvarageStep(int* arr, int len);
 
@@ -30,6 +31,7 @@ int* createArray(int length) {
 	for (int i = 0; i < length; i++) {
 		a1[i] = rand();
 	}
+
 	return a1;
 }
 
@@ -41,6 +43,41 @@ int* array_copy(int* arr, int length) {
 
 	return a2;
 }
+//
+//long testerSingleQsort(int tests, int length) {
+//	double t1, t2;
+//	t1 = getCPUTime();
+//
+//}
+
+void tester(int tests, int length) {
+	int** arrays1 = new int* [tests];
+	int** arrays2 = new int* [tests];
+
+	for (int t = 0; t < tests; ++t) {
+		int* arr1 = createArray(length);
+		arrays1[t] = arr1;
+		arrays2[t] = array_copy(arr1, length);
+	}
+
+	double t1, t2;
+	t1 = getCPUTime();
+	for (int t = 0; t < tests; ++t) {
+		quickSort(arrays1[t], 0, length - 1);
+	}
+	t2 = getCPUTime();
+
+	
+	cout << "Avg Qsort   time for " << length << " elements: " << (t2 - t1) * 1000 / tests << endl;
+
+	t1 = getCPUTime();
+	for (int t = 0; t < tests; ++t) {
+		newGenerationSort(arrays2[t], length);
+	}
+	t2 = getCPUTime();
+
+	cout << "Avg newSort time for " << length << " elements: " << (t2 - t1) * 1000 / tests << endl;
+}
 
 int main() {
 	srand(time(NULL));
@@ -50,18 +87,25 @@ int main() {
 	cout << "size: ";
 	cin >> length;
 
+	int t;
+	cout << "tests: ";
+	cin >> t;
+	tester(t, length);
+	system("pause");
+
 	int* a1 = createArray(length);
 	int* a2 = array_copy(a1, length);
 	int* a3 = array_copy(a1, length);
 
 	t1 = getCPUTime();
-	sort(a2, a2 + length);
+	quickSort(a2, 0, length - 1);
 	t2 = getCPUTime();
 
 	cout << "Qsort time: " << (t2 - t1) * 1000 << endl;
 	
 	t1 = getCPUTime();
-	rela589n::fastSort(a1, length);
+	//fastSort(a1, length);
+	newGenerationSort(a1, length);
 	t2 = getCPUTime();
 
 	cout << "My time: " << (t2 - t1) * 1000 << endl;
@@ -74,7 +118,7 @@ int main() {
 
 		printArr(a1, length);
 		printArr(a2, length);
-		
+		newGenerationSort(a3, length);
 	}
 
 	system("pause");
