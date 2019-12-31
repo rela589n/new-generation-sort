@@ -13,13 +13,8 @@ namespace rela589n {
 
 	namespace 
 	{
-		struct sortNode
-		{
-			int start;
-			int length;
-			bool order; // true = asc, false = desc
-		};
-
+		#include <iostream>
+		using namespace std;
 
 		template <class T> void swap(T& a, T& b)
 		{
@@ -101,18 +96,7 @@ namespace rela589n {
 				return;
 
 			int mid = lo + (hi - lo) / 2;
-			//if (hi - lo <= minPortion) {
-			//	int* part = glue(a + lo, hi - lo + 1, nullptr, 0); // copy
-			//	newGenerationSort(part, hi - lo + 1);
-
-			//	for (int i = lo; i <= hi; ++i) {
-			//		a[i] = part[i - lo];
-			//	}
-			//	delete[] part;
-
-			//	return;
-			//}
-
+			
 			merge_sort(a, lo, mid);
 			merge_sort(a, mid + 1, hi);
 
@@ -142,7 +126,7 @@ namespace rela589n {
 			int* selection = new int[len << 1];
 			int left = len - 1;
 			int right = len;
-
+				
 			selection[left--] = arr[0];
 			for (int i = 1; i < localCatchUp; ++i) {
 				selection[right++] = arr[i];
@@ -179,22 +163,7 @@ namespace rela589n {
 					continue;
 				}
 
-				bool flag = false;
-
-				/*if (restFirstLen < restLen) {
-					if (!restFirstLen) {
-						flag = true;
-					}
-					else if (restSecondLen < restLen && restSecondLen) {
-						flag = restFirst[restFirstLen - 1] <= arr[i];
-					}
-					else {
-						flag = true;
-					}
-				}*/
-				
-				flag = i & 1;
-				if (flag) {
+				if (i & 1) {
 					restFirst[restFirstLen++] = arr[i];
 				}
 				else {
@@ -203,6 +172,8 @@ namespace rela589n {
 			}
 			delete[] arr; // to fix memory overflow =>>>
 			int selectionLen = right - left - 1;
+			
+			cout << "SelectionLength: " << selectionLen << " | restFirstLength: " << restFirstLen << " | restsecondLength: " << restSecondLen << endl;
 
 			int* copy = glue(selection + left + 1, selectionLen, nullptr, 0); // return new array with the same elements
 			delete[] selection; // =>>> we need to de	lete the rest after significant data
@@ -210,6 +181,7 @@ namespace rela589n {
 
 			newGenerationSort(restFirst, restFirstLen);
 			newGenerationSort(restSecond, restSecondLen);
+
 
 			int* restFull = glue(restFirst, restFirstLen, restSecond, restSecondLen);
 
@@ -300,134 +272,4 @@ namespace rela589n {
 		int portion = 256;
 		newGenerationMergeSort(arr, 0, length - 1, portion);
 	}
-
-	/*
-	std::pair<int*, int> internalMerger(rela589n::sortNode nodes[], int lo, int hi, int* arr);
-	// A utility function to get maximum value in arr[] 
-	int getMax(int *arr, int n)
-	{
-		int mx = arr[0];
-		for (int i = 1; i < n; ++i)
-			if (arr[i] > mx)
-				mx = arr[i];
-		return mx;
-	}
-
-	// A function to do counting sort of arr[] according to 
-	// the digit represented by exp. 
-	void countSort(int *arr, int n, int exp)
-	{
-		int *output = new int[n]; // output array 
-		int i, count[10] = { 0 };
-
-		// Store count of occurrences in count[] 
-		for (i = 0; i < n; ++i)
-			++count[(arr[i] / exp) % 10];
-
-		// Change count[i] so that count[i] now contains actual 
-		//  position of this digit in output[] 
-		for (i = 1; i < 10; ++i)
-			count[i] += count[i - 1];
-
-		// Build the output array 
-		for (i = n - 1; i >= 0; --i)
-		{
-			output[count[(arr[i] / exp) % 10] - 1] = arr[i];
-			--count[(arr[i] / exp) % 10];
-		}
-
-		// Copy the output array to arr[], so that arr[] now 
-		// contains sorted numbers according to current digit 
-		for (i = 0; i < n; ++i)
-			arr[i] = output[i];
-	}
-
-	// The main function to that sorts arr[] of size n using  
-	// Radix Sort 
-	void radixsort(int *arr, int n)
-	{
-		// Find the maximum number to know number of digits 
-		int m = getMax(arr, n);
-
-		// Do counting sort for every digit. Note that instead 
-		// of passing digit number, exp is passed. exp is 10^i 
-		// where i is current digit number 
-		for (int exp = 1; m / exp > 0; exp *= 10)
-			countSort(arr, n, exp);
-	}
-
-	int sortNodeFunctor(const sortNode& node) {
-		return node.length;
-	}
-	
-	std::pair<int*, int> internalMerger(rela589n::sortNode nodes[], int lo, int hi, int* arr) {
-		if (hi == lo) {
-			if (!nodes[lo].order) {
-				std::reverse(arr + nodes[lo].start, arr + nodes[lo].start + nodes[lo].length);
-			}
-
-			return std::make_pair(arr + nodes[lo].start, nodes[lo].length);
-		}
-		
-		int mid = lo + (hi - lo) / 2;
-		auto first = internalMerger(nodes, lo, mid, arr);
-		auto second = internalMerger(nodes, mid + 1, hi, arr);
-
-		int *merged = glue(first.first, first.second, second.first, second.second);
-
-		return std::make_pair(merged, first.second + second.second);
-	}
-
-	int * merger(sortNode* nodes, int nodesLen, int* arr) 
-	{
-		RadixSort<sortNode>::radixSort(nodes, nodesLen, sortNodeFunctor);
-		auto result = internalMerger(nodes, 0, nodesLen - 1, arr);
-		return result.first;
-	}
-
-	void secondNewgenerationSort(int* arr, int length)
-	{
-		int i = 1;
-		for (; i < length && arr[i - 1] < arr[i]; ++i);
-
-		sortNode* nodes = new sortNode[(length + 1) << 1];
-		int nodesLength = 0;
-
-		bool asc = arr[0] <= arr[1];
-
-		int lastStart = 0;
-		int lastLen = 2;
-		for (int i = 2; i < length - 1; ++i) {
-			bool a = arr[i - 1] <= arr[i];
-			
-			if (a && asc || !(a || asc)) {
-				++lastLen;
-			}
-			else {
-				nodes[nodesLength].start = lastStart;
-				nodes[nodesLength].length = lastLen;
-				nodes[nodesLength].order = asc;
-				++nodesLength;
-
-				lastLen = 2;
-				lastStart = i;
-				asc = arr[i] <= arr[i + 1];
-				++i;
-			}
-		}
-
-		nodes[nodesLength].start = lastStart;
-		nodes[nodesLength].length = lastLen;
-		nodes[nodesLength].order = asc;
-		++nodesLength;
-
-		int* merged = merger(nodes, nodesLength, arr);
-
-		for (int i = 0; i < length; ++i) {
-			arr[i] = merged[i];
-		}
-		delete[] nodes;
-		delete[] merged;
-	}
-	*/
 }

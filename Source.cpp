@@ -56,6 +56,8 @@ int getInt(const int& el) {
 }
 
 void tester(int tests, int length) {
+	double t1, t2;
+
 	int** arrays1 = new int* [tests];
 	int** arrays2 = new int* [tests];
 
@@ -63,18 +65,20 @@ void tester(int tests, int length) {
 		int* arr1 = createArray(length);
 		arrays1[t] = arr1;
 		arrays2[t] = array_copy(arr1, length);
+		delete[] arrays1[t];
 	}
 
-	double t1, t2;
-	t1 = getCPUTime();
+	/*t1 = getCPUTime();
 	for (int t = 0; t < tests; ++t) {
 	 	quickSort(arrays1[t], 0, length - 1);
 	}
 	t2 = getCPUTime();
-
+	
 	cout << "Avg Qsort   time for " << length << " elements: " << (t2 - t1) * 1000 / tests << endl;
+	*/
 
-	int portion = 256;
+	int portion = catchUp = 8;
+	
 	t1 = getCPUTime();
 	for (int t = 0; t < tests; ++t) {
 		newGenerationSort(arrays2[t], length);
@@ -82,14 +86,13 @@ void tester(int tests, int length) {
 	t2 = getCPUTime();
 
 	cout << "Avg newSort time for " << length << " elements: " << (t2 - t1) * 1000 / tests << " Portion: "<< portion << endl;
-
-
+	/*
 	for (int t = 0; t < tests; ++t) {
 		if (!arraysEqual(arrays1[t], arrays2[t], length)) {
 			cout << "Review your code! Something wrong..." << endl;
 			break;
 		}
-	}
+	}*/
 
 	cout << "confirmed" << endl;	
 }
