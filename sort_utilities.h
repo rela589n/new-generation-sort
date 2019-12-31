@@ -123,20 +123,30 @@ namespace rela589n {
 			delete[] b;
 		}
 
+		int catchUp = 8;
+
+		void insertionSort(int*& arr, int lo, int hi) {
+			for (int i = lo + 1; i <= hi; ++i)
+				for (int j = i; j > 0 && arr[j - 1] > arr[j]; --j)
+					swap(arr[j - 1], arr[j]);
+		}
+
 		/// works only if arr is pointer assigned by new keyword
 		void newGenerationSort(int*& arr, int len) {
-			if (len < 2)
+			int localCatchUp = min(len, catchUp);
+			insertionSort(arr, 0, localCatchUp - 1);
+
+			if (len <= localCatchUp)
 				return;
 
 			int* selection = new int[len << 1];
 			int left = len - 1;
 			int right = len;
 
-			if (arr[0] > arr[1])
-				swap(arr[0], arr[1]);
-
 			selection[left--] = arr[0];
-			selection[right++] = arr[1];
+			for (int i = 1; i < localCatchUp; ++i) {
+				selection[right++] = arr[i];
+			}
 
 			int restLen = len >> 1;
 			int* restFirst = new int[restLen];
@@ -145,17 +155,27 @@ namespace rela589n {
 			int restFirstLen = 0;
 			int restSecondLen = 0;
 
-			for (int i = 2; i < len; ++i) {
+			for (int i = localCatchUp; i < len; ++i) {
 
-				if (selection[right - 1] <= arr[i])
+				if (selection[right - localCatchUp] <= arr[i])
 				{
-					selection[right++] = arr[i];
+					selection[right] = arr[i];
+
+					for (int j = right; selection[j - 1] > selection[j]; --j)
+						swap(selection[j - 1], selection[j]);
+
+					++right;
 					continue;
 				}
 
-				if (selection[left + 1] >= arr[i])
+				if (selection[left + localCatchUp] >= arr[i])
 				{
-					selection[left--] = arr[i];
+					selection[left] = arr[i];
+
+					for (int j = left; selection[j] > selection[j + 1]; ++j)
+						swap(selection[j], selection[j + 1]);
+
+					--left;
 					continue;
 				}
 
@@ -185,7 +205,7 @@ namespace rela589n {
 			int selectionLen = right - left - 1;
 
 			int* copy = glue(selection + left + 1, selectionLen, nullptr, 0); // return new array with the same elements
-			delete[] selection; // =>>> we need to delete the rest after significant data
+			delete[] selection; // =>>> we need to de	lete the rest after significant data
 			selection = copy;
 
 			newGenerationSort(restFirst, restFirstLen);
@@ -243,53 +263,33 @@ namespace rela589n {
 
 			glueAndDelete(arr, selection, selectionLen, restElements, restLen);
 		}
-
-
-
-		/* This function takes last element as pivot, places
-		   the pivot element at its correct position in sorted
-			array, and places all smaller (smaller than pivot)
-		   to left of pivot and all greater elements to right
-		   of pivot */
-		int partition(int arr[], int low, int high)
-		{
-			int pivot = arr[high];    // pivot 
-			int i = (low - 1);  // Index of smaller element 
-
-			for (int j = low; j <= high - 1; j++)
-			{
-				// If current element is smaller than or 
-				// equal to pivot 
-				if (arr[j] <= pivot)
-				{
-					i++;    // increment index of smaller element 
-					swap(arr[i], arr[j]);
-				}
-			}
-			swap(arr[i + 1], arr[high]);
-			return (i + 1);
+		
+		// [min, max]
+		int random(int min, int max) {
+			return min + rand() % ((max + 1) - min);
 		}
 
-		/* The main function that implements QuickSort
-		 arr[] --> Array to be sorted,
-		  low  --> Starting index,
-		  high  --> Ending index */
-		void quickSort(int arr[], int low, int high)
+		void quickSort(int * arr, int b, int e)
 		{
-			if (low < high)
+			int l = b, r = e;
+			int piv = arr[random(l, r)];
+			while (l <= r)	
 			{
-				/* pi is partitioning index, arr[p] is now
-				   at right place */
-				int pi = partition(arr, low, high);
+				for (; arr[l] < piv; ++l);
 
-				// Separately sort elements before 
-				// partition and after partition 
-				quickSort(arr, low, pi - 1);
-				quickSort(arr, pi + 1, high);
+				for (; arr[r] > piv; --r);
+
+				if (l <= r)
+					swap(arr[l++], arr[r--]);
 			}
+			if (b < r)
+				quickSort(arr, b, r);
+			if (e > l)
+				quickSort(arr, l, e);
 		}
+
 	}
-	std::pair<int*, int> internalMerger(rela589n::sortNode nodes[], int lo, int hi, int* arr);
+	
 
 
 	void fastSort(int *arr, int length) {
@@ -302,7 +302,7 @@ namespace rela589n {
 	}
 
 	/*
-
+	std::pair<int*, int> internalMerger(rela589n::sortNode nodes[], int lo, int hi, int* arr);
 	// A utility function to get maximum value in arr[] 
 	int getMax(int *arr, int n)
 	{
