@@ -29,7 +29,7 @@ int* createArray(int length) {
 	int* a1 = new int[length];
 
 	for (int i = 0; i < length; i++) {
-		a1[i] = rand();
+		a1[i] = rand() % 10;
 	}
 
 	return a1;
@@ -50,6 +50,10 @@ int* array_copy(int* arr, int length) {
 //
 //}
 
+int getInt(const int& el) {
+	return el;
+}
+
 void tester(int tests, int length) {
 	int** arrays1 = new int* [tests];
 	int** arrays2 = new int* [tests];
@@ -63,20 +67,20 @@ void tester(int tests, int length) {
 	double t1, t2;
 	t1 = getCPUTime();
 	for (int t = 0; t < tests; ++t) {
-		quickSort(arrays1[t], 0, length - 1);
+	 	quickSort(arrays1[t], 0, length - 1);
 	}
 	t2 = getCPUTime();
 
-	
 	cout << "Avg Qsort   time for " << length << " elements: " << (t2 - t1) * 1000 / tests << endl;
 
+	int portion = 256;
 	t1 = getCPUTime();
 	for (int t = 0; t < tests; ++t) {
-		newGenerationSort(arrays2[t], length);
+		newGenerationMergeSort(arrays2[t], 0, length - 1, portion);
 	}
 	t2 = getCPUTime();
 
-	cout << "Avg newSort time for " << length << " elements: " << (t2 - t1) * 1000 / tests << endl;
+	cout << "Avg newSort time for " << length << " elements: " << (t2 - t1) * 1000 / tests << "Portion: "<< portion << endl;
 }
 
 int main() {
@@ -86,12 +90,12 @@ int main() {
 
 	cout << "size: ";
 	cin >> length;
-
+	/*
 	int t;
 	cout << "tests: ";
 	cin >> t;
 	tester(t, length);
-	system("pause");
+	system("pause");*/
 
 	int* a1 = createArray(length);
 	int* a2 = array_copy(a1, length);
@@ -105,7 +109,8 @@ int main() {
 	
 	t1 = getCPUTime();
 	//fastSort(a1, length);
-	newGenerationSort(a1, length);
+	secondNewgenerationSort(a1, length);
+	//newGenerationSort(a1, length);
 	t2 = getCPUTime();
 
 	cout << "My time: " << (t2 - t1) * 1000 << endl;
@@ -118,7 +123,7 @@ int main() {
 
 		printArr(a1, length);
 		printArr(a2, length);
-		newGenerationSort(a3, length);
+		secondNewgenerationSort(a3, length);
 	}
 
 	system("pause");
