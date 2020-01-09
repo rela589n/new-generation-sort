@@ -48,19 +48,20 @@ namespace rela589n {
 
 		void glueAndDelete(int*& arr, int*& a, int lenA, int*& b, int lenB) {
 			if (lenA == 0) {
-				arr = b;
 				delete[] a;
+				arr = b;
 				return;
 			}
 			if (lenB == 0) {
-				arr = a;
 				delete[] b;
+				arr = a;
 				return;
 			}
 
-			arr = glue(a, lenA, b, lenB);
+			int *copy = glue(a, lenA, b, lenB); // if we want to write into one of passed arrays
 			delete[]a;
 			delete[]b;
+			arr = copy;
 		}
 
 		void newGenerationMergeSort(int* a, int lo, int hi, int& minPortion) {
@@ -126,7 +127,7 @@ namespace rela589n {
 			int* selection = new int[len << 1];
 			int left = len - 1;
 			int right = len;
-				
+			
 			selection[left--] = arr[0];
 			for (int i = 1; i < localCatchUp; ++i) {
 				selection[right++] = arr[i];
@@ -173,7 +174,7 @@ namespace rela589n {
 			delete[] arr; // to fix memory overflow =>>>
 			int selectionLen = right - left - 1;
 			
-			cout << "SelectionLength: " << selectionLen << " | restFirstLength: " << restFirstLen << " | restsecondLength: " << restSecondLen << endl;
+			//cout << "SelectionLength: " << selectionLen << " | restFirstLength: " << restFirstLen << " | restsecondLength: " << restSecondLen << endl;
 
 			int* copy = glue(selection + left + 1, selectionLen, nullptr, 0); // return new array with the same elements
 			delete[] selection; // =>>> we need to de	lete the rest after significant data
@@ -182,13 +183,21 @@ namespace rela589n {
 			newGenerationSort(restFirst, restFirstLen);
 			newGenerationSort(restSecond, restSecondLen);
 
-
-			int* restFull = glue(restFirst, restFirstLen, restSecond, restSecondLen);
-
-			delete[] restFirst;
-			delete[] restSecond;
-
-			glueAndDelete(arr, selection, selectionLen, restFull, restFirstLen + restSecondLen);
+			int* part2;
+			int part2Len;
+			if (selectionLen < restFirstLen) {
+				glueAndDelete(selection, restFirst, restFirstLen, selection, selectionLen);
+				selectionLen += restFirstLen;
+				
+				part2 = restSecond;
+				part2Len = restSecondLen;
+			}
+			else {
+				glueAndDelete(part2, restFirst, restFirstLen, restSecond, restSecondLen);
+				part2Len = restFirstLen + restSecondLen;
+			}
+			
+			glueAndDelete(arr, selection, selectionLen, part2, part2Len);
 		}
 
 		void FirstNewGeneratingSort(int*& arr, int len) {
