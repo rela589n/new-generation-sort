@@ -8,8 +8,7 @@
 //
 
 namespace rela589n {
-	#include "RadixSort.h"
-	//#include <algorithm>
+	//#include "RadixSort.h"
 
 	namespace 
 	{
@@ -24,44 +23,52 @@ namespace rela589n {
 		void newGenerationSort(int*& arr, int len);
 		void FirstNewGeneratingSort(int*& arr, int len);
 		int* glue(int* a, int lenA, int* b, int lenB);
-		void glueAndDelete(int*& arr, int*& a, int lenA, int*& b, int lenB);
+		void glueDelete(int*& arr, int*& a, int lenA, int*& b, int lenB);
 		void merge_sort(int* a, int lo, int hi);
 
 		int* glue(int* a, int lenA, int* b, int lenB) {
-			int lenC = lenA + lenB, * c = new int[lenC], indx_a = 0, indx_b = 0, i = 0;
-			for (; i < lenC; i++) {
+			int lenC = lenA + lenB;
+			int* c = new int[lenC]; // результирующий массив
+			int indx_a = 0;
+			int indx_b = 0;
+			int i = 0;
+			
+			for (; i < lenC; ++i) {
 				if (indx_a < lenA) {
-					if (indx_b < lenB) {
-						c[i] = (a[indx_a] < b[indx_b]) ? a[indx_a++] : b[indx_b++];
+					if (indx_b < lenB) { // Оба массива содержат элементы
+						c[i] = (a[indx_a] < b[indx_b]) ? 
+							a[indx_a++] : 
+							b[indx_b++];
 						continue;
-					}
+					} // Элементы есть только в первом
 					while (indx_a < lenA)
 						c[i++] = a[indx_a++];
 				}
-				else
+				else // Элементы есть только во втором
 					while (indx_b < lenB)
 						c[i++] = b[indx_b++];
 				break;
 			}
+			
 			return c;
 		}
 
-		void glueAndDelete(int*& arr, int*& a, int lenA, int*& b, int lenB) {
-			if (lenA == 0) {
-				delete[] a;
-				arr = b;
+		void glueDelete(int*& arr, int*& a, int lenA, int*& b, int lenB) {
+			if (lenA == 0) { // если первый пустой
+				delete[] a; // высвобождаем от него память
+				arr = b; // результирующий будет вторым массивом
 				return;
 			}
-			if (lenB == 0) {
-				delete[] b;
-				arr = a;
+			if (lenB == 0) { // если второй пустой
+				delete[] b; // высвобождаем от него память
+				arr = a; // результирующий будет вторым массивом
 				return;
 			}
 
-			int *copy = glue(a, lenA, b, lenB); // if we want to write into one of passed arrays
-			delete[]a;
-			delete[]b;
-			arr = copy;
+			int *copy = glue(a, lenA, b, lenB); // сливаем
+			delete[]a; // удаляемо ненужные массивы
+			delete[]b; // удаляемо ненужные массивы
+			arr = copy;  // изменяем указатель
 		}
 
 		void newGenerationMergeSort(int* a, int lo, int hi, int& minPortion) {
@@ -69,10 +76,9 @@ namespace rela589n {
 				return;
 
 			int mid = lo + (hi - lo) / 2;
-			if (hi - lo <= minPortion) {
-				int* part = glue(a + lo, hi - lo + 1, nullptr, 0); // copy
+			if (hi - lo <= minPortion) { // если количество элементов вмещается в минимальный блок, то выполняем нашу сортировку
+				int* part = glue(a + lo, hi - lo + 1, nullptr, 0); // просто копирует массив
 				FirstNewGeneratingSort(part, hi - lo + 1);
-				//newGenerationSort(part, hi - lo + 1);
 
 				for (int i = lo; i <= hi; ++i) {
 					a[i] = part[i - lo];
@@ -116,17 +122,17 @@ namespace rela589n {
 					swap(arr[j - 1], arr[j]);
 		}
 
-		/// works only if arr is pointer assigned by new keyword
+		/// works only if arr is pointer has been assigned by new keyword
 		void newGenerationSort(int*& arr, int len) {
-			int localCatchUp = min(len, catchUp);
-			insertionSort(arr, 0, localCatchUp - 1);
+			int localCatchUp = min(catchUp, len); // потому что мы не можем пытаться вставлять элемент за границами массива
+			insertionSort(arr, 0, localCatchUp - 1); // для начала сортируем первые localCatchUp элементов
 
-			if (len <= localCatchUp)
-				return;
+			if (len <= localCatchUp) // на случай если это массив на n <= catchUp элементов
+				return; // а также это база рекурсии
 
-			int* selection = new int[len << 1];
-			int left = len - 1;
-			int right = len;
+			int* selection = new int[len << 1]; // то же что и new int[len * 2]
+			int left = len - 1; // индекс для хранения новых минимальных элементов
+			int right = len;  // индекс для хранения новых максимальных элементов
 			
 			selection[left--] = arr[0];
 			for (int i = 1; i < localCatchUp; ++i) {
@@ -142,7 +148,7 @@ namespace rela589n {
 
 			for (int i = localCatchUp; i < len; ++i) {
 
-				if (selection[right - localCatchUp] <= arr[i])
+				if (selection[right - localCatchUp] <= arr[i]) 
 				{
 					selection[right] = arr[i];
 
@@ -157,28 +163,27 @@ namespace rela589n {
 				{
 					selection[left] = arr[i];
 
-					for (int j = left; selection[j] > selection[j + 1]; ++j)
+					for (int j = left; selection[j] >= selection[j + 1]; ++j)
 						swap(selection[j], selection[j + 1]);
 
 					--left;
 					continue;
 				}
 
-				if (i & 1) {
+				if (i & 1) { // i - непарное
 					restFirst[restFirstLen++] = arr[i];
 				}
 				else {
 					restSecond[restSecondLen++] = arr[i];
 				}
 			}
-			delete[] arr; // to fix memory overflow =>>>
-			int selectionLen = right - left - 1;
-			
-			//cout << "SelectionLength: " << selectionLen << " | restFirstLength: " << restFirstLen << " | restsecondLength: " << restSecondLen << endl;
+			delete[] arr; 
 
-			int* copy = glue(selection + left + 1, selectionLen, nullptr, 0); // return new array with the same elements
-			delete[] selection; // =>>> we need to de	lete the rest after significant data
-			selection = copy;
+			int selectionLen = right - left - 1; // просто длина нашей выборки
+			int* copy = glue(selection + left + 1, selectionLen, nullptr, 0); // копируем все элементы выборки в новый массив
+			
+			delete[] selection; // удаляем массив размером 2 * len элементов и
+			selection = copy; // вместо него используем ровно столько памяти, сколько нужно
 
 			newGenerationSort(restFirst, restFirstLen);
 			newGenerationSort(restSecond, restSecondLen);
@@ -186,63 +191,64 @@ namespace rela589n {
 			int* part2;
 			int part2Len;
 			if (selectionLen < restFirstLen) {
-				glueAndDelete(selection, restFirst, restFirstLen, selection, selectionLen);
+				glueDelete(selection, restFirst, restFirstLen, selection, selectionLen); // selection += restFirst 
 				selectionLen += restFirstLen;
 				
-				part2 = restSecond;
+				part2 = restSecond;	
 				part2Len = restSecondLen;
 			}
 			else {
-				glueAndDelete(part2, restFirst, restFirstLen, restSecond, restSecondLen);
+				glueDelete(part2, restFirst, restFirstLen, restSecond, restSecondLen); // part2 = restFirst + restSecond
 				part2Len = restFirstLen + restSecondLen;
 			}
 			
-			glueAndDelete(arr, selection, selectionLen, part2, part2Len);
+			glueDelete(arr, selection, selectionLen, part2, part2Len);
 		}
 
 		void FirstNewGeneratingSort(int*& arr, int len) {
 			if (len < 2)
 				return;
 
-			int* selection = new int[len << 1];
-			int left1 = len - 1;
-			int right1 = len;
+			int* selection = new int[len << 1]; // то же что и new int[len * 2]
+			int left = len - 1; // индекс для хранения новых минимальных элементов
+			int right = len;  // индекс для хранения новых максимальных элементов
 
 			int* restElements = new int[len];
+			int restLen = 0;
 
 			if (arr[0] > arr[1])
 				swap(arr[0], arr[1]);
 
-			selection[left1--] = arr[0];
-			selection[right1++] = arr[1];
+			selection[left--] = arr[0];
+			selection[right++] = arr[1];
 
-			int restLen = 0;
 			for (int i = 2; i < len; ++i) {
 
-				if (selection[right1 - 1] <= arr[i])
+				if (selection[right - 1] <= arr[i]) // проверяем на новый максимум
 				{
-					selection[right1++] = arr[i];
+					selection[right++] = arr[i];
 					continue;
 				}
 
-				if (selection[left1 + 1] >= arr[i])
+				if (selection[left + 1] >= arr[i]) // проверяем на новый минимум
 				{
-					selection[left1--] = arr[i];
+					selection[left--] = arr[i];
 					continue;
 				}
 
-				restElements[restLen++] = arr[i];
+				restElements[restLen++] = arr[i]; // если элемент не попал в выборку, он попадёт сюда
 			}
-			delete[] arr; // to fix memory overflow =>>>
-			int selectionLen = right1 - left1 - 1;
+			int selectionLen = right - left - 1; // длина выборки 
+			int* copy = glue(selection + left + 1, selectionLen, nullptr, 0); // в даном контексте просто копирует выборку
 
-			int* copy = glue(selection + left1 + 1, selectionLen, nullptr, 0); // return new array with the same elements
-			delete[] selection; // =>>> we need to delete the rest after significant data
-			selection = copy;
+			delete[] selection; // мы выделяли 2 * len памяти, и большая её часть в большинстве случаев просто не используется, поэтому освобождаем лишнюю память
+			selection = copy; // изменяем указатель, так что теперь selection содержит только значащую информацию
 
+			delete[] arr; // далее будет рекурсивный вызов, а все элементы для сортировки у нас уже есть, поэтому освободим память от исходного массива
+		
 			FirstNewGeneratingSort(restElements, restLen);
 
-			glueAndDelete(arr, selection, selectionLen, restElements, restLen);
+			glueDelete(arr, selection, selectionLen, restElements, restLen);
 		}
 		
 		// [min, max]
@@ -270,15 +276,11 @@ namespace rela589n {
 		}
 
 	}
-	
 
 
-	void fastSort(int *arr, int length) {
-		//newGenerationSort(arr, length);
-
-		//int portion = log2(length);
-		//portion *= portion * portion;
-		int portion = 256;
+	void newMergeSort(int *arr, int length) {
+		int portion = log2(length);
+		portion *= portion;
 		newGenerationMergeSort(arr, 0, length - 1, portion);
 	}
 }
